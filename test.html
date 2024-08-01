@@ -49,13 +49,13 @@ const ctx = render.context;
 ctx.imageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
 let generalScale;
-generalScale = width >= 2400 ? (circleSize = 110, 0.48) :
-              width >= 2000 ? (circleSize = 75, 0.38) :
-              width >= 1800 ? (circleSize = 70, 0.36) :
-              width >= 1600 ? (circleSize = 65, 0.34) :
-              width >= 1200 ? (circleSize = 60, 0.32) :
-              width >= 900 ? (circleSize = 55, 0.28) :
-              (circleSize = 30, 0.2);
+generalScale = width >= 2400 ? (circleSize = 150, 0.48) :  // increased from 110 to 150
+              width >= 2000 ? (circleSize = 100, 0.38) :  // increased from 75 to 100
+              width >= 1800 ? (circleSize = 90, 0.36) :   // increased from 70 to 90
+              width >= 1600 ? (circleSize = 85, 0.34) :   // increased from 65 to 85
+              width >= 1200 ? (circleSize = 80, 0.32) :   // increased from 60 to 80
+              width >= 900 ? (circleSize = 70, 0.28) :    // increased from 55 to 70
+              (circleSize = 50, 0.2);                     // increased from 30 to 50
 const imageUrls = [
     "images/sticker-1.png",
     "images/sticker-2.png",
