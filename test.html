@@ -50,13 +50,13 @@ ctx.imageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
 
 let generalScale;
-generalScale = width >= 2400 ? (circleSize = 130, 0.25) :  // Slightly increased circleSize, more reduced generalScale
-              width >= 2000 ? (circleSize = 90, 0.22) :  // Slightly increased circleSize, more reduced generalScale
-              width >= 1800 ? (circleSize = 85, 0.20) :  // Slightly increased circleSize, more reduced generalScale
-              width >= 1600 ? (circleSize = 80, 0.18) :  // Slightly increased circleSize, more reduced generalScale
-              width >= 1200 ? (circleSize = 75, 0.16) :  // Slightly increased circleSize, more reduced generalScale
-              width >= 900 ? (circleSize = 70, 0.15) :    // Slightly increased circleSize, more reduced generalScale
-              (circleSize = 50, 0.14);                     // Slightly increased circleSize, more reduced generalScale
+generalScale = width >= 2400 ? (circleSize = 125, 0.30) :  // Adjusted circleSize and generalScale
+              width >= 2000 ? (circleSize = 85, 0.28) :  // Adjusted circleSize and generalScale
+              width >= 1800 ? (circleSize = 80, 0.26) :  // Adjusted circleSize and generalScale
+              width >= 1600 ? (circleSize = 75, 0.24) :  // Adjusted circleSize and generalScale
+              width >= 1200 ? (circleSize = 70, 0.22) :  // Adjusted circleSize and generalScale
+              width >= 900 ? (circleSize = 65, 0.20) :    // Adjusted circleSize and generalScale
+              (circleSize = 45, 0.18);                    // Adjusted circleSize and generalScale
 
 
 const imageUrls = [
