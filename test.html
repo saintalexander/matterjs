@@ -56,7 +56,7 @@ generalScale = width >= 2400 ? (circleSize = 110, 0.48) :
               width >= 1200 ? (circleSize = 60, 0.32) :
               width >= 900 ? (circleSize = 55, 0.28) :
               (circleSize = 30, 0.2);
-const imageUrls = [
+const imagePaths = [
     "images/sticker-1.png",
     "images/sticker-2.png",
     "images/sticker-3.png",
@@ -69,94 +69,102 @@ const imageUrls = [
     "images/sticker-10.png"
 ];
 
-let currentImageIndex = 0,
-shuffledImageUrls = shuffleArray([...imageUrls]);
-function shuffleArray(n) {
-    for (let e = n.length - 1; 0 < e; e--) {
-        var i = Math.floor(Math.random() * (e + 1));
-        [n[e], n[i]] = [n[i], n[e]];
-    }
-    return n;
+let loadedImages = [], loadedImageCount = 0;
+
+function loadImage(path) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({img: img, path: path});
+        img.onerror = reject;
+        img.src = path;
+    });
 }
 
-const createSmiley = function(e, n) {
-    currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
-    var texture = shuffledImageUrls[currentImageIndex++];
-    var img = new Image();
-    img.src = texture;
-    img.onload = function() {
-        var xScale = circleSize / img.width;
-        var yScale = circleSize / img.height;
-        var options = {
+Promise.all(imagePaths.map(loadImage)).then(images => {
+    loadedImages = images;
+    initMatter();
+}).catch(err => console.error('Failed to load images', err));
+
+function initMatter() {
+    let currentImageIndex = 0,
+    shuffledImages = shuffleArray([...loadedImages]);
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    const createImageBody = function(x, y) {
+        currentImageIndex >= shuffledImages.length && (currentImageIndex = 0, shuffledImages = shuffleArray([...loadedImages]));
+        const {img} = shuffledImages[currentImageIndex++];
+        const scale = generalScale * (circleSize / Math.max(img.width, img.height));
+        return Bodies.circle(x, y, circleSize, {
             render: {
                 sprite: {
-                    texture: texture,
-                    xScale: xScale,
-                    yScale: yScale,
+                    texture: img.src,
+                    xScale: scale,
+                    yScale: scale,
                     margin: 0,
                     strokeStyle: "transparent",
                     lineWidth: 0
                 }
             }
-        };
-        Body.scale(Bodies.circle(e, n, circleSize, options), xScale, yScale);
+        });
     };
-    return Bodies.circle(e, n, circleSize, {
-        render: {
-            sprite: {
-                texture: texture,
-                xScale: generalScale,
-                yScale: generalScale,
-                margin: 0,
-                strokeStyle: "transparent",
-                lineWidth: 0
-            }
+
+    const columns = 7, rows = 6,
+    imageBodies = Composites.stack(10, 10, columns, rows, 10, 10, (x, y) => createImageBody(x, y));
+
+    World.add(world, imageBodies);
+
+    const walls = [
+        Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+        Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+        Bodies.rectangle(width, height / 2, 40, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+        Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
+    ];
+    World.add(world, walls);
+
+    const mouse = Mouse.create(render.canvas),
+    mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {render: {visible: false}}
+    });
+    World.add(world, mouseConstraint);
+
+    Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
+    Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = "default"; });
+
+    render.mouse = mouse;
+    Matter.Runner.run(engine);
+    Render.run(render);
+
+    const canvas = document.getElementById("fontsCanvas");
+
+    function applyForcesToBodies() {
+        const bodies = Matter.Composite.allBodies(world);
+        bodies.forEach(body => {
+            const forceMagnitude = 0.05 * body.mass;
+            Matter.Body.applyForce(body, body.position, {
+                x: (forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]),
+                y: (-forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1])
+            });
+        });
+    }
+
+    canvas.addEventListener("wheel", function(e) {
+        if (e.shiftKey) {
+            e.preventDefault();
+            const deltaX = e.deltaX || e.detail || e.wheelDeltaX;
+            canvas.scrollLeft += deltaX;
         }
     });
-};
 
-const columns = 7, rows = 6;
-const smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
-World.add(world, smileys);
-
-const walls = [
-    Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
-    Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
-    Bodies.rectangle(width, height / 2, 40, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
-    Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
-];
-World.add(world, walls);
-
-const mouse = Mouse.create(render.canvas),
-mouseConstraint = MouseConstraint.create(engine, {
-    mouse: mouse,
-    constraint: {render: {visible: false}}
-});
-World.add(world, mouseConstraint);
-
-Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
-Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = "default"; });
-
-render.mouse = mouse;
-Matter.Runner.run(engine);
-Render.run(render);
-
-const canvas = document.getElementById("fontsCanvas");
-function applyForcesToBodies() {
-    const e = Matter.Composite.allBodies(world);
-    e.forEach(e => {
-        var n = 0.05 * e.mass;
-        Matter.Body.applyForce(e, e.position, {x: (n + Math.random() * n) * Matter.Common.choose([1, -1]), y: (-n + Math.random() * n) * Matter.Common.choose([1, -1])});
-    });
+    applyForcesToBodies();
 }
-canvas.addEventListener("wheel", function(e) {
-    if (e.shiftKey) {
-        e.preventDefault();
-        e = e.deltaX || e.detail || e.wheelDeltaX;
-        canvas.scrollLeft += e;
-    }
-});
-applyForcesToBodies();
 </script>
 </body>
 </html>
