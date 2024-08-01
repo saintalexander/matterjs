@@ -48,78 +48,11 @@ render.canvas.id = "fontsCanvas";
 const ctx = render.context;
 ctx.imageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
-let generalScale;
-generalScale = width >= 2400 ? (circleSize = 150, 0.48) :  // increased from 110 to 150
-              width >= 2000 ? (circleSize = 100, 0.38) :  // increased from 75 to 100
-              width >= 1800 ? (circleSize = 90, 0.36) :   // increased from 70 to 90
-              width >= 1600 ? (circleSize = 85, 0.34) :   // increased from 65 to 85
-              width >= 1200 ? (circleSize = 80, 0.32) :   // increased from 60 to 80
-              width >= 900 ? (circleSize = 70, 0.28) :    // increased from 55 to 70
-              (circleSize = 50, 0.2);                     // increased from 30 to 50
-const imageUrls = [
-    "images/sticker-1.png",
-    "images/sticker-2.png",
-    "images/sticker-3.png",
-    "images/sticker-4.png",
-    "images/sticker-5.png",
-    "images/sticker-6.png",
-    "images/sticker-7.png",
-    "images/sticker-8.png",
-    "images/sticker-9.png",
-    "images/sticker-10.png"
-];
 
-let currentImageIndex = 0,
-shuffledImageUrls = shuffleArray([...imageUrls]);
-function shuffleArray(n) {
-    for (let e = n.length - 1; 0 < e; e--) {
-        var i = Math.floor(Math.random() * (e + 1));
-        [n[e], n[i]] = [n[i], n[e]];
-    }
-    return n;
-}
-const createSmiley = function(e, n) {
-    currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
-    var i = {texture: shuffledImageUrls[currentImageIndex++], xScale: generalScale, yScale: generalScale, margin: 0, strokeStyle: "transparent", lineWidth: 0};
-    return Bodies.circle(e, n, circleSize, {render: {sprite: i}});
-},
-columns = 7, rows = 6,
-smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
-World.add(world, smileys);
-const walls = [
-    Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
-    Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
-    Bodies.rectangle(width, height / 2, 40, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
-    Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
-];
-World.add(world, walls);
-const mouse = Mouse.create(render.canvas),
-mouseConstraint = MouseConstraint.create(engine, {
-    mouse: mouse,
-    constraint: {render: {visible: false}}
-});
-World.add(world, mouseConstraint);
-Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
-Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = "default"; });
-render.mouse = mouse;
-Matter.Runner.run(engine);
-Render.run(render);
-const canvas = document.getElementById("fontsCanvas");
-function applyForcesToBodies() {
-    const e = Matter.Composite.allBodies(world);
-    e.forEach(e => {
-        var n = 0.05 * e.mass;
-        Matter.Body.applyForce(e, e.position, {x: (n + Math.random() * n) * Matter.Common.choose([1, -1]), y: (-n + Math.random() * n) * Matter.Common.choose([1, -1])});
-    });
-}
-canvas.addEventListener("wheel", function(e) {
-    if (e.shiftKey) {
-        e.preventDefault();
-        e = e.deltaX || e.detail || e.wheelDeltaX;
-        canvas.scrollLeft += e;
-    }
-});
-applyForcesToBodies();
-</script>
-</body>
-</html>
+let generalScale;
+generalScale = width >= 2400 ? (circleSize = 150, 0.35) :  // Increased circleSize, adjusted generalScale
+              width >= 2000 ? (circleSize = 115, 0.30) :  // Increased circleSize, adjusted generalScale
+              width >= 1800 ? (circleSize = 110, 0.28) :  // Increased circleSize, adjusted generalScale
+              width >= 1600 ? (circleSize = 105, 0.26) :  // Increased circleSize, adjusted generalScale
+              width >= 1200 ? (circleSize = 100, 0.24) :  // Increased circleSize, adjusted generalScale
+              width >= 900 ? (circleSize = 95, 0
