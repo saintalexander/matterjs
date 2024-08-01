@@ -78,14 +78,47 @@ function shuffleArray(n) {
     }
     return n;
 }
+
 const createSmiley = function(e, n) {
     currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
-    var i = {texture: shuffledImageUrls[currentImageIndex++], xScale: generalScale, yScale: generalScale, margin: 0, strokeStyle: "transparent", lineWidth: 0};
-    return Bodies.circle(e, n, circleSize, {render: {sprite: i}});
-},
-columns = 7, rows = 6,
-smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
+    var texture = shuffledImageUrls[currentImageIndex++];
+    var img = new Image();
+    img.src = texture;
+    img.onload = function() {
+        var xScale = circleSize / img.width;
+        var yScale = circleSize / img.height;
+        var options = {
+            render: {
+                sprite: {
+                    texture: texture,
+                    xScale: xScale,
+                    yScale: yScale,
+                    margin: 0,
+                    strokeStyle: "transparent",
+                    lineWidth: 0
+                }
+            }
+        };
+        Body.scale(Bodies.circle(e, n, circleSize, options), xScale, yScale);
+    };
+    return Bodies.circle(e, n, circleSize, {
+        render: {
+            sprite: {
+                texture: texture,
+                xScale: generalScale,
+                yScale: generalScale,
+                margin: 0,
+                strokeStyle: "transparent",
+                lineWidth: 0
+            }
+        }
+    });
+};
+
+const columns = 7, rows = 6;
+const smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
 World.add(world, smileys);
+
 const walls = [
     Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
     Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
@@ -93,17 +126,21 @@ const walls = [
     Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
 ];
 World.add(world, walls);
+
 const mouse = Mouse.create(render.canvas),
 mouseConstraint = MouseConstraint.create(engine, {
     mouse: mouse,
     constraint: {render: {visible: false}}
 });
 World.add(world, mouseConstraint);
+
 Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
 Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = "default"; });
+
 render.mouse = mouse;
 Matter.Runner.run(engine);
 Render.run(render);
+
 const canvas = document.getElementById("fontsCanvas");
 function applyForcesToBodies() {
     const e = Matter.Composite.allBodies(world);
