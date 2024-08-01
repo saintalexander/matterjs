@@ -50,13 +50,14 @@ ctx.imageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
 
 let generalScale;
-generalScale = width >= 2400 ? (circleSize = 130, 0.42) :  // Slightly increased circleSize, adjusted generalScale
-              width >= 2000 ? (circleSize = 90, 0.35) :  // Slightly increased circleSize, adjusted generalScale
-              width >= 1800 ? (circleSize = 85, 0.34) :  // Slightly increased circleSize, adjusted generalScale
-              width >= 1600 ? (circleSize = 80, 0.32) :  // Slightly increased circleSize, adjusted generalScale
-              width >= 1200 ? (circleSize = 75, 0.30) :  // Slightly increased circleSize, adjusted generalScale
-              width >= 900 ? (circleSize = 70, 0.28) :    // Slightly increased circleSize, adjusted generalScale
-              (circleSize = 50, 0.24);                     // Slightly increased circleSize, adjusted generalScale
+generalScale = width >= 2400 ? (circleSize = 130, 0.25) :  // Slightly increased circleSize, more reduced generalScale
+              width >= 2000 ? (circleSize = 90, 0.22) :  // Slightly increased circleSize, more reduced generalScale
+              width >= 1800 ? (circleSize = 85, 0.20) :  // Slightly increased circleSize, more reduced generalScale
+              width >= 1600 ? (circleSize = 80, 0.18) :  // Slightly increased circleSize, more reduced generalScale
+              width >= 1200 ? (circleSize = 75, 0.16) :  // Slightly increased circleSize, more reduced generalScale
+              width >= 900 ? (circleSize = 70, 0.15) :    // Slightly increased circleSize, more reduced generalScale
+              (circleSize = 50, 0.14);                     // Slightly increased circleSize, more reduced generalScale
+
 
 const imageUrls = [
     "images/sticker-1.png",
