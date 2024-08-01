@@ -27,23 +27,23 @@ html.dark-theme body {--bkg:#fff;--text:#000;background:var(--bkg);color:var(--t
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <script>
 // Matter.js setup
-const {Engine, Render, World, Bodies, Mouse, MouseConstraint, Composites, Body, Events} = Matter,
-engine = Engine.create(),
-world = engine.world,
-width = window.innerWidth,
-height = window.innerHeight,
-render = Render.create({
-    element: document.querySelector("#fontsbundel"),
-    engine: engine,
-    options: {
-        width: width,
-        height: height,
-        wireframes: false,
-        background: "transparent",
-        hasBounds: false,
-        pixelRatio: window.devicePixelRatio
-    }
-});
+const { Engine, Render, World, Bodies, Mouse, MouseConstraint, Composites, Body, Events } = Matter,
+    engine = Engine.create(),
+    world = engine.world,
+    width = window.innerWidth,
+    height = window.innerHeight,
+    render = Render.create({
+        element: document.querySelector("#fontsbundel"),
+        engine: engine,
+        options: {
+            width: width,
+            height: height,
+            wireframes: false,
+            background: "transparent",
+            hasBounds: false,
+            pixelRatio: window.devicePixelRatio
+        }
+    });
 render.canvas.id = "fontsCanvas";
 const ctx = render.context;
 ctx.imageSmoothingEnabled = true;
@@ -65,34 +65,23 @@ const imageUrls = [
 let currentImageIndex = 0,
 shuffledImageUrls = shuffleArray([...imageUrls]);
 
-function shuffleArray(n) {
-    for (let e = n.length - 1; 0 < e; e--) {
-        var i = Math.floor(Math.random() * (e + 1));
-        [n[e], n[i]] = [n[i], n[e]];
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
-    return n;
+    return array;
 }
 
-async function getImageDimensions(url) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            resolve({ width: img.width, height: img.height });
-        };
-        img.onerror = reject;
-        img.src = url;
-    });
-}
-
-async function createSmiley(e, n) {
+function createSmiley(x, y) {
     currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
     const imageUrl = shuffledImageUrls[currentImageIndex++];
-    const { width, height } = await getImageDimensions(imageUrl);
+    const image = new Image();
+    image.src = imageUrl;
 
-    const margin = 10; // Adjust the margin as needed
-    const circleSize = Math.max(width, height) / 2 + margin;
+    const circleSize = Math.max(image.width, image.height) / 2 + 10; // Adding a margin to cover the image properly
 
-    var i = {
+    var sprite = {
         texture: imageUrl,
         xScale: 1, // Keep original scale
         yScale: 1, // Keep original scale
@@ -100,17 +89,14 @@ async function createSmiley(e, n) {
         strokeStyle: "transparent",
         lineWidth: 0
     };
-    return Bodies.circle(e, n, circleSize, { render: { sprite: i } });
+
+    return Bodies.circle(x, y, circleSize, { render: { sprite: sprite } });
 }
 
-const columns = 7, rows = 6;
+const columns = 7, rows = 6,
+    smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(x, y) { return createSmiley(x, y); });
 
-async function createSmileys() {
-    const smileys = Composites.stack(10, 10, columns, rows, 10, 10, async (e, n) => await createSmiley(e, n));
-    World.add(world, smileys);
-}
-
-createSmileys();
+World.add(world, smileys);
 
 const walls = [
     Bodies.rectangle(width / 2, 0, width, 40, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
@@ -131,23 +117,28 @@ Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = 
 render.mouse = mouse;
 Matter.Runner.run(engine);
 Render.run(render);
+
 const canvas = document.getElementById("fontsCanvas");
 
 function applyForcesToBodies() {
-    const e = Matter.Composite.allBodies(world);
-    e.forEach(e => {
-        var n = 0.05 * e.mass;
-        Matter.Body.applyForce(e, e.position, { x: (n + Math.random() * n) * Matter.Common.choose([1, -1]), y: (-n + Math.random() * n) * Matter.Common.choose([1, -1]) });
+    const allBodies = Matter.Composite.allBodies(world);
+    allBodies.forEach(body => {
+        const forceMagnitude = 0.05 * body.mass;
+        Matter.Body.applyForce(body, body.position, { 
+            x: (forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]), 
+            y: (-forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]) 
+        });
     });
 }
 
 canvas.addEventListener("wheel", function(e) {
     if (e.shiftKey) {
         e.preventDefault();
-        e = e.deltaX || e.detail || e.wheelDeltaX;
-        canvas.scrollLeft += e;
+        const delta = e.deltaX || e.detail || e.wheelDeltaX;
+        canvas.scrollLeft += delta;
     }
 });
+
 applyForcesToBodies();
 </script>
 </body>
