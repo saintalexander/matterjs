@@ -27,28 +27,35 @@ html.dark-theme body {--bkg:#fff;--text:#000;background:var(--bkg);color:var(--t
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <script>
 // Matter.js setup
-const { Engine, Render, World, Bodies, Mouse, MouseConstraint, Composites, Body, Events } = Matter,
-    engine = Engine.create(),
-    world = engine.world,
-    width = window.innerWidth,
-    height = window.innerHeight,
-    render = Render.create({
-        element: document.querySelector("#fontsbundel"),
-        engine: engine,
-        options: {
-            width: width,
-            height: height,
-            wireframes: false,
-            background: "transparent",
-            hasBounds: false,
-            pixelRatio: window.devicePixelRatio
-        }
-    });
+const {Engine, Render, World, Bodies, Mouse, MouseConstraint, Composites, Body, Events} = Matter,
+engine = Engine.create(),
+world = engine.world,
+width = window.innerWidth,
+height = window.innerHeight,
+render = Render.create({
+    element: document.querySelector("#fontsbundel"),
+    engine: engine,
+    options: {
+        width: width,
+        height: height,
+        wireframes: false,
+        background: "transparent",
+        hasBounds: false,
+        pixelRatio: window.devicePixelRatio
+    }
+});
 render.canvas.id = "fontsCanvas";
 const ctx = render.context;
 ctx.imageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
-
+let generalScale;
+generalScale = width >= 2400 ? (circleSize = 110, 0.48) :
+              width >= 2000 ? (circleSize = 75, 0.38) :
+              width >= 1800 ? (circleSize = 70, 0.36) :
+              width >= 1600 ? (circleSize = 65, 0.34) :
+              width >= 1200 ? (circleSize = 60, 0.32) :
+              width >= 900 ? (circleSize = 55, 0.28) :
+              (circleSize = 30, 0.2);
 const imageUrls = [
     "images/sticker-1.png",
     "images/sticker-2.png",
@@ -64,52 +71,32 @@ const imageUrls = [
 
 let currentImageIndex = 0,
 shuffledImageUrls = shuffleArray([...imageUrls]);
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+function shuffleArray(n) {
+    for (let e = n.length - 1; 0 < e; e--) {
+        var i = Math.floor(Math.random() * (e + 1));
+        [n[e], n[i]] = [n[i], n[e]];
     }
-    return array;
+    return n;
 }
-
-function createSmiley(x, y) {
+const createSmiley = function(e, n) {
     currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
-    const imageUrl = shuffledImageUrls[currentImageIndex++];
-    const image = new Image();
-    image.src = imageUrl;
-
-    const circleSize = Math.max(image.width, image.height) / 2 + 10; // Adding a margin to cover the image properly
-
-    var sprite = {
-        texture: imageUrl,
-        xScale: 1, // Keep original scale
-        yScale: 1, // Keep original scale
-        margin: 0,
-        strokeStyle: "transparent",
-        lineWidth: 0
-    };
-
-    return Bodies.circle(x, y, circleSize, { render: { sprite: sprite } });
-}
-
-const columns = 7, rows = 6,
-    smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(x, y) { return createSmiley(x, y); });
-
+    var i = {texture: shuffledImageUrls[currentImageIndex++], xScale: generalScale, yScale: generalScale, margin: 0, strokeStyle: "transparent", lineWidth: 0};
+    return Bodies.circle(e, n, circleSize, {render: {sprite: i}});
+},
+columns = 7, rows = 6,
+smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
 World.add(world, smileys);
-
 const walls = [
-    Bodies.rectangle(width / 2, 0, width, 40, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
-    Bodies.rectangle(width / 2, height, width, 20, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
-    Bodies.rectangle(width, height / 2, 40, height, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
-    Bodies.rectangle(0, height / 2, 60, height, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } })
+    Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+    Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+    Bodies.rectangle(width, height / 2, 40, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+    Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
 ];
 World.add(world, walls);
-
 const mouse = Mouse.create(render.canvas),
 mouseConstraint = MouseConstraint.create(engine, {
     mouse: mouse,
-    constraint: { render: { visible: false } }
+    constraint: {render: {visible: false}}
 });
 World.add(world, mouseConstraint);
 Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
@@ -117,28 +104,21 @@ Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = 
 render.mouse = mouse;
 Matter.Runner.run(engine);
 Render.run(render);
-
 const canvas = document.getElementById("fontsCanvas");
-
 function applyForcesToBodies() {
-    const allBodies = Matter.Composite.allBodies(world);
-    allBodies.forEach(body => {
-        const forceMagnitude = 0.05 * body.mass;
-        Matter.Body.applyForce(body, body.position, { 
-            x: (forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]), 
-            y: (-forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]) 
-        });
+    const e = Matter.Composite.allBodies(world);
+    e.forEach(e => {
+        var n = 0.05 * e.mass;
+        Matter.Body.applyForce(e, e.position, {x: (n + Math.random() * n) * Matter.Common.choose([1, -1]), y: (-n + Math.random() * n) * Matter.Common.choose([1, -1])});
     });
 }
-
 canvas.addEventListener("wheel", function(e) {
     if (e.shiftKey) {
         e.preventDefault();
-        const delta = e.deltaX || e.detail || e.wheelDeltaX;
-        canvas.scrollLeft += delta;
+        e = e.deltaX || e.detail || e.wheelDeltaX;
+        canvas.scrollLeft += e;
     }
 });
-
 applyForcesToBodies();
 </script>
 </body>
