@@ -6,21 +6,14 @@
 <meta name="description" content="Luzi Type is a Swiss type foundry with an innovative catalogue of sophisticated fonts.">
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="icon" href="/image/favicons/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css">   
+<script>
+!function(){const e="dark"===localStorage.getItem("theme");document.documentElement.classList.toggle("dark-theme",e),document.addEventListener("DOMContentLoaded",function(){document.querySelector(".btn-toggle").addEventListener("click",function(){localStorage.setItem("theme",document.documentElement.classList.toggle("dark-theme")?"dark":"light")})})}();
+</script>
 <style>
-    html.dark-theme body {--bkg:#fff;--text:#000;background:var(--bkg);color:var(--text)}
-    @media only screen and (max-width: 800px) {
-        #fontsbundel {margin-top:-400px}
-    }    
-    @media only screen and (min-width: 800px) {
-        #fontsbundel {margin-top:-9vw}
-    }
-    #fontsbundel {
-        position: relative;
-        width: 100%;
-        height: 100vh; /* Full viewport height for now */
-        overflow: hidden;
-    }
+html.dark-theme body {--bkg:#fff;--text:#000;background:var(--bkg);color:var(--text)}
+@media only screen and (max-width: 800px){#fontsbundel{margin-top:-400px}}    
+@media only screen and (min-width: 800px){#fontsbundel{margin-top:-9vw}}    
 </style>
 </head>
 <body>    
@@ -28,142 +21,107 @@
     <!-- Navigation and other content here -->
 </div>
 
-<div id="fontsbundel"></div> <!-- The canvas will be here -->
+<div id="fontsbundel"></div> <!-- Canvas will be here -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 <script>
 // Matter.js setup
-const {Engine, Render, World, Bodies, Mouse, MouseConstraint, Composites, Body, Events} = Matter;
-
-// Create the engine and world
-const engine = Engine.create();
-const world = engine.world;
-
-// Function to set canvas size based on the parent container (responsive)
-function resizeCanvas() {
-    const container = document.querySelector("#fontsbundel");
-    const width = container.offsetWidth;
-    const height = container.offsetHeight;
-
-    // Update render size
-    render.canvas.width = width;
-    render.canvas.height = height;
-    render.options.width = width;
-    render.options.height = height;
-
-    // Update walls to match the new size
-    updateWalls(width, height);
-}
-
-// Renderer setup
-const render = Render.create({
+const {Engine, Render, World, Bodies, Mouse, MouseConstraint, Composites, Body, Events} = Matter,
+engine = Engine.create(),
+world = engine.world,
+width = window.innerWidth,
+height = window.innerHeight,
+render = Render.create({
     element: document.querySelector("#fontsbundel"),
     engine: engine,
     options: {
+        width: width,
+        height: height,
         wireframes: false,
         background: "transparent",
+        hasBounds: false,
         pixelRatio: window.devicePixelRatio
     }
 });
+render.canvas.id = "fontsCanvas";
+const ctx = render.context;
+ctx.imageSmoothingEnabled = true;
+ctx.webkitImageSmoothingEnabled = true;
 
-// Scale and circle size based on container dimensions
 let generalScale;
-function updateScale(width) {
-    generalScale = width >= 2400 ? (circleSize = 125, 0.30) :
-                  width >= 2000 ? (circleSize = 85, 0.28) :
-                  width >= 1800 ? (circleSize = 80, 0.26) :
-                  width >= 1600 ? (circleSize = 75, 0.24) :
-                  width >= 1200 ? (circleSize = 70, 0.22) :
-                  width >= 900  ? (circleSize = 65, 0.20) :
-                  (circleSize = 45, 0.18);
-}
+generalScale = width >= 2400 ? (circleSize = 125, 0.30) :  // Adjusted circleSize and generalScale
+              width >= 2000 ? (circleSize = 85, 0.28) :  // Adjusted circleSize and generalScale
+              width >= 1800 ? (circleSize = 80, 0.26) :  // Adjusted circleSize and generalScale
+              width >= 1600 ? (circleSize = 75, 0.24) :  // Adjusted circleSize and generalScale
+              width >= 1200 ? (circleSize = 70, 0.22) :  // Adjusted circleSize and generalScale
+              width >= 900 ? (circleSize = 65, 0.20) :    // Adjusted circleSize and generalScale
+              (circleSize = 45, 0.18);                    // Adjusted circleSize and generalScale
 
-// Image URLs and shuffling function
+
 const imageUrls = [
-    "images/sticker-1.png", "images/sticker-2.png", "images/sticker-3.png",
-    "images/sticker-4.png", "images/sticker-5.png", "images/sticker-6.png",
-    "images/sticker-7.png", "images/sticker-8.png", "images/sticker-9.png", 
+    "images/sticker-1.png",
+    "images/sticker-2.png",
+    "images/sticker-3.png",
+    "images/sticker-4.png",
+    "images/sticker-5.png",
+    "images/sticker-6.png",
+    "images/sticker-7.png",
+    "images/sticker-8.png",
+    "images/sticker-9.png",
     "images/sticker-10.png"
 ];
 
-let currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]);
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+let currentImageIndex = 0,
+shuffledImageUrls = shuffleArray([...imageUrls]);
+function shuffleArray(n) {
+    for (let e = n.length - 1; 0 < e; e--) {
+        var i = Math.floor(Math.random() * (e + 1));
+        [n[e], n[i]] = [n[i], n[e]];
     }
-    return array;
+    return n;
 }
-
-// Create smiley with the texture
-function createSmiley(x, y) {
-    if (currentImageIndex >= shuffledImageUrls.length) {
-        currentImageIndex = 0;
-        shuffledImageUrls = shuffleArray([...imageUrls]);
-    }
-    const spriteOptions = {
-        texture: shuffledImageUrls[currentImageIndex++],
-        xScale: generalScale,
-        yScale: generalScale,
-        margin: 0,
-        strokeStyle: "transparent",
-        lineWidth: 0
-    };
-    return Bodies.circle(x, y, circleSize, { render: { sprite: spriteOptions } });
-}
-
-// Smiley object stack creation
-function createSmileys(width, height) {
-    updateScale(width);  // Update scale based on container size
-    const smileys = Composites.stack(10, 10, 7, 6, 10, 10, (x, y) => createSmiley(x, y));
-    World.add(world, smileys);
-}
-
-// Walls around the canvas
-function updateWalls(width, height) {
-    const walls = [
-        Bodies.rectangle(width / 2, 0, width, 40, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
-        Bodies.rectangle(width / 2, height, width, 20, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
-        Bodies.rectangle(width, height / 2, 40, height, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } }),
-        Bodies.rectangle(0, height / 2, 60, height, { isStatic: true, render: { fillStyle: "rgba(0, 0, 0, 0)" } })
-    ];
-    World.add(world, walls);
-}
-
-// Mouse interaction
-const mouse = Mouse.create(render.canvas);
-const mouseConstraint = MouseConstraint.create(engine, {
+const createSmiley = function(e, n) {
+    currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
+    var i = {texture: shuffledImageUrls[currentImageIndex++], xScale: generalScale, yScale: generalScale, margin: 0, strokeStyle: "transparent", lineWidth: 0};
+    return Bodies.circle(e, n, circleSize, {render: {sprite: i}});
+},
+columns = 7, rows = 6,
+smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
+World.add(world, smileys);
+const walls = [
+    Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+    Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+    Bodies.rectangle(width, height / 2, 40, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
+    Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
+];
+World.add(world, walls);
+const mouse = Mouse.create(render.canvas),
+mouseConstraint = MouseConstraint.create(engine, {
     mouse: mouse,
-    constraint: { render: { visible: false } }
+    constraint: {render: {visible: false}}
 });
 World.add(world, mouseConstraint);
-
-// Run the engine and renderer
+Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
+Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = "default"; });
+render.mouse = mouse;
 Matter.Runner.run(engine);
 Render.run(render);
-
-// Resize listener
-window.addEventListener('resize', resizeCanvas);
-
-// Initial setup
-resizeCanvas();
-createSmileys(render.canvas.width, render.canvas.height);
-
-// Apply random forces to bodies
+const canvas = document.getElementById("fontsCanvas");
 function applyForcesToBodies() {
-    const bodies = Matter.Composite.allBodies(world);
-    bodies.forEach(body => {
-        const force = 0.05 * body.mass;
-        Matter.Body.applyForce(body, body.position, {
-            x: (force + Math.random() * force) * Matter.Common.choose([1, -1]),
-            y: (-force + Math.random() * force) * Matter.Common.choose([1, -1])
-        });
+    const e = Matter.Composite.allBodies(world);
+    e.forEach(e => {
+        var n = 0.05 * e.mass;
+        Matter.Body.applyForce(e, e.position, {x: (n + Math.random() * n) * Matter.Common.choose([1, -1]), y: (-n + Math.random() * n) * Matter.Common.choose([1, -1])});
     });
 }
-
-// Initial force application
+canvas.addEventListener("wheel", function(e) {
+    if (e.shiftKey) {
+        e.preventDefault();
+        e = e.deltaX || e.detail || e.wheelDeltaX;
+        canvas.scrollLeft += e;
+    }
+});
 applyForcesToBodies();
 </script>
 </body>
