@@ -67,12 +67,12 @@ const createTextBody = function(x, y, text) {
     const textWidth = text.length * 15;  // Approximate width based on text length
     const body = Bodies.rectangle(x, y, textWidth, 50, {
         render: {
-            fillStyle: "transparent",  // Invisible rectangle background
+            fillStyle: "#eee",  // Invisible rectangle background
             strokeStyle: "transparent", // No border
             text: {
                 content: text,
                 fontSize: 18,
-                color: "#000",
+                color: "#fff",
                 fontFamily: "sans-serif"
             }
         }
