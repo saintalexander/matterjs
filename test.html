@@ -1,10 +1,11 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Text Shape Simulation</title>
-<meta name="description" content="Using Matter.js for Text Rendering">
+<title>Luzi Type Foundry</title>
+<meta name="description" content="Luzi Type is a Swiss type foundry with an innovative catalogue of sophisticated fonts.">
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="icon" href="/image/favicons/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/style.css">   
 <script>
 !function(){const e="dark"===localStorage.getItem("theme");document.documentElement.classList.toggle("dark-theme",e),document.addEventListener("DOMContentLoaded",function(){document.querySelector(".btn-toggle").addEventListener("click",function(){localStorage.setItem("theme",document.documentElement.classList.toggle("dark-theme")?"dark":"light")})})}();
@@ -44,52 +45,50 @@ render = Render.create({
     }
 });
 render.canvas.id = "fontsCanvas";
+const ctx = render.context;
+ctx.imageSmoothingEnabled = true;
+ctx.webkitImageSmoothingEnabled = true;
 
-// Adjust generalScale based on screen width
-let generalScale = width >= 2400 ? 0.30 :
-                   width >= 2000 ? 0.28 :
-                   width >= 1800 ? 0.26 :
-                   width >= 1600 ? 0.24 :
-                   width >= 1200 ? 0.22 : 
-                   width >= 900 ? 0.20 : 0.18;
+let generalScale;
+generalScale = width >= 2400 ? (circleSize = 125, 0.30) :  // Adjusted circleSize and generalScale
+              width >= 2000 ? (circleSize = 85, 0.28) :  // Adjusted circleSize and generalScale
+              width >= 1800 ? (circleSize = 80, 0.26) :  // Adjusted circleSize and generalScale
+              width >= 1600 ? (circleSize = 75, 0.24) :  // Adjusted circleSize and generalScale
+              width >= 1200 ? (circleSize = 70, 0.22) :  // Adjusted circleSize and generalScale
+              width >= 900 ? (circleSize = 65, 0.20) :    // Adjusted circleSize and generalScale
+              (circleSize = 45, 0.18);                    // Adjusted circleSize and generalScale
 
-// List of words to display instead of images
-const wordList = [
-    { text: "Webbutveckling", color: "#FF5733" }, // Example hex colors
-    { text: "Filmproduktion", color: "#33FF57" }, 
-    { text: "Grafisk design", color: "#3357FF" }, 
-    { text: "Varumärkesplatform", color: "#FF33A6" }, 
-    { text: "Illustration", color: "#33FFF2" }
+
+const imageUrls = [
+    "images/sticker-1.png",
+    "images/sticker-2.png",
+    "images/sticker-3.png",
+    "images/sticker-4.png",
+    "images/sticker-5.png",
+    "images/sticker-6.png",
+    "images/sticker-7.png",
+    "images/sticker-8.png",
+    "images/sticker-9.png",
+    "images/sticker-10.png"
 ];
 
-// Function to create text-based body
-const createTextBody = function(x, y, wordObj) {
-    const textWidth = wordObj.text.length * 15;  // Approximate width based on text length
-    const body = Bodies.rectangle(x, y, textWidth, 50, {
-        angle: Math.random() * Math.PI,  // Allow random angle for dynamic rotation
-        restitution: 0.9,  // Bounciness
-        friction: 0.3,     // Friction to control sliding
-        render: {
-            fillStyle: wordObj.color,  // Set background color based on word's color property
-            strokeStyle: "transparent",   // No border
-            text: {
-                content: wordObj.text,
-                fontSize: 18,
-                color: "#fff",             // White text
-                fontFamily: "sans-serif"
-            }
-        }
-    });
-    return body;
-};
-
-// Create the text bodies
-const textBodies = Composites.stack(10, 10, wordList.length, 1, 20, 20, (x, y, column, row) => {
-    return createTextBody(x, y, wordList[column % wordList.length]);
-});
-World.add(world, textBodies);
-
-// Walls to contain the text bodies within the canvas
+let currentImageIndex = 0,
+shuffledImageUrls = shuffleArray([...imageUrls]);
+function shuffleArray(n) {
+    for (let e = n.length - 1; 0 < e; e--) {
+        var i = Math.floor(Math.random() * (e + 1));
+        [n[e], n[i]] = [n[i], n[e]];
+    }
+    return n;
+}
+const createSmiley = function(e, n) {
+    currentImageIndex >= shuffledImageUrls.length && (currentImageIndex = 0, shuffledImageUrls = shuffleArray([...imageUrls]));
+    var i = {texture: shuffledImageUrls[currentImageIndex++], xScale: generalScale, yScale: generalScale, margin: 0, strokeStyle: "transparent", lineWidth: 0};
+    return Bodies.circle(e, n, circleSize, {render: {sprite: i}});
+},
+columns = 7, rows = 6,
+smileys = Composites.stack(10, 10, columns, rows, 10, 10, function(e, n) { return createSmiley(e, n); });
+World.add(world, smileys);
 const walls = [
     Bodies.rectangle(width / 2, 0, width, 40, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
     Bodies.rectangle(width / 2, height, width, 20, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}}),
@@ -97,51 +96,32 @@ const walls = [
     Bodies.rectangle(0, height / 2, 60, height, {isStatic: true, render: {fillStyle: "rgba(0, 0, 0, 0)"}})
 ];
 World.add(world, walls);
-
-// Mouse control for interacting with the text
 const mouse = Mouse.create(render.canvas),
 mouseConstraint = MouseConstraint.create(engine, {
     mouse: mouse,
     constraint: {render: {visible: false}}
 });
 World.add(world, mouseConstraint);
+Events.on(mouseConstraint, "startdrag", function() { render.canvas.style.cursor = "grabbing"; });
+Events.on(mouseConstraint, "enddrag", function() { render.canvas.style.cursor = "default"; });
 render.mouse = mouse;
-
-// Run the Matter.js engine
 Matter.Runner.run(engine);
 Render.run(render);
-
-// Custom render loop to draw text on the canvas
-(function customRender() {
-    const bodies = Matter.Composite.allBodies(world);
-    const ctx = render.context;
-    ctx.clearRect(0, 0, render.options.width, render.options.height);  // Clear canvas
-
-    // Loop through each body and render the text
-    for (const body of bodies) {
-        if (body.render.text) {
-            const { content, fontSize, color, fontFamily } = body.render.text;
-            ctx.font = `${fontSize}px ${fontFamily}`;
-            ctx.fillStyle = color;
-            const textWidth = ctx.measureText(content).width;
-            ctx.fillText(content, body.position.x - textWidth / 2, body.position.y + fontSize / 2);
-        }
-    }
-
-    requestAnimationFrame(customRender);
-})();
-
-// Apply random forces to bodies for dynamic movement
+const canvas = document.getElementById("fontsCanvas");
 function applyForcesToBodies() {
-    const bodies = Matter.Composite.allBodies(world);
-    bodies.forEach(body => {
-        var forceMagnitude = 0.05 * body.mass;
-        Matter.Body.applyForce(body, body.position, {
-            x: (forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]),
-            y: (-forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1])
-        });
+    const e = Matter.Composite.allBodies(world);
+    e.forEach(e => {
+        var n = 0.05 * e.mass;
+        Matter.Body.applyForce(e, e.position, {x: (n + Math.random() * n) * Matter.Common.choose([1, -1]), y: (-n + Math.random() * n) * Matter.Common.choose([1, -1])});
     });
 }
+canvas.addEventListener("wheel", function(e) {
+    if (e.shiftKey) {
+        e.preventDefault();
+        e = e.deltaX || e.detail || e.wheelDeltaX;
+        canvas.scrollLeft += e;
+    }
+});
 applyForcesToBodies();
 </script>
 </body>
