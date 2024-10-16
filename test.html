@@ -55,24 +55,27 @@ let generalScale = width >= 2400 ? 0.30 :
 
 // List of words to display instead of images
 const wordList = [
-    "Webbutveckling", 
-    "Filmproduktion", 
-    "Grafisk design", 
-    "Varumärkesplatform", 
-    "Illustration"
+    { text: "Webbutveckling", color: "#FF5733" }, // Example hex colors
+    { text: "Filmproduktion", color: "#33FF57" }, 
+    { text: "Grafisk design", color: "#3357FF" }, 
+    { text: "Varumärkesplatform", color: "#FF33A6" }, 
+    { text: "Illustration", color: "#33FFF2" }
 ];
 
 // Function to create text-based body
-const createTextBody = function(x, y, text) {
-    const textWidth = text.length * 15;  // Approximate width based on text length
+const createTextBody = function(x, y, wordObj) {
+    const textWidth = wordObj.text.length * 15;  // Approximate width based on text length
     const body = Bodies.rectangle(x, y, textWidth, 50, {
+        angle: Math.random() * Math.PI,  // Allow random angle for dynamic rotation
+        restitution: 0.9,  // Bounciness
+        friction: 0.3,     // Friction to control sliding
         render: {
-            fillStyle: "#eee",  // Invisible rectangle background
-            strokeStyle: "transparent", // No border
+            fillStyle: wordObj.color,  // Set background color based on word's color property
+            strokeStyle: "transparent",   // No border
             text: {
-                content: text,
+                content: wordObj.text,
                 fontSize: 18,
-                color: "#fff",
+                color: "#fff",             // White text
                 fontFamily: "sans-serif"
             }
         }
@@ -127,6 +130,19 @@ Render.run(render);
 
     requestAnimationFrame(customRender);
 })();
+
+// Apply random forces to bodies for dynamic movement
+function applyForcesToBodies() {
+    const bodies = Matter.Composite.allBodies(world);
+    bodies.forEach(body => {
+        var forceMagnitude = 0.05 * body.mass;
+        Matter.Body.applyForce(body, body.position, {
+            x: (forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1]),
+            y: (-forceMagnitude + Math.random() * forceMagnitude) * Matter.Common.choose([1, -1])
+        });
+    });
+}
+applyForcesToBodies();
 </script>
 </body>
 </html>
